@@ -1,60 +1,83 @@
 // ........................................................
 // test.js
 // ........................................................
-
-const Logica = require("../Logica.js")
+var request = require('request')
 var assert = require('assert')
 
-describe("Test 1: Usar database.db", function () {
-    var laLogica = null
+const IP_PUERTO = "http://localhost:8080"
 
-    it("conectar a la base de datos", function (hecho) {
-        laLogica = new Logica(
-            "../bd/database.db",
-            function (err) {
-                if (err) {
-                    throw new Error("No se ha establecido conexión a database.db")
-                }
+describe("Test 1 : Recuerda arrancar el servidor", function () {
+
+
+    it("probar que GET /prueba responde ¡Funciona!", function (hecho) {
+        request.get({ url: IP_PUERTO + "/prueba", headers: { 'User-Agent': 'ruben' } },
+            function (err, respuesta, carga) {
+                assert.equal(err, null, "¿ha habido un error?")
+                assert.equal(respuesta.statusCode, 200, "¿El código no es 200 (OK)")
+                assert.equal(carga, "¡Funciona!", "¿La carga no es ¡Funciona!?")
                 hecho()
-            })
-    }) // it conectar
-
-
-    it("borrar todas las filas", async function () {
-        await laLogica.borrarFilasDe("Mediciones")
-    }) // it borrar de
-
-    it("puedo insertar una medicion", async function () {
-        await laLogica.insertarMedicion({ id: "5", medicion: "5321" })
-        var res = await laLogica.buscarMedicionConId("5")
-        assert.equal(res.length, 1, "¿no hay un resulado?")
-        assert.equal(res[0].id, "5", "¿no es 5?")
-        assert.equal(res[0].medicion, "5321", "¿no es 5321?")
-    }) // it insertar medicion
-
-    
-
-
-    it("no puedo insertar una medicion con id que ya está",
-        async function () {
-            var error = null
-            try {
-                await laLogica.insertarMedicion({ id: "5", medicion: "5678" })
-            } catch (err) {
-                error = err
-            }
-            assert(error, "¿Ha insertado la id que ya esta (5)?")
-        }) // it insertar el que ya esta
+            } // callback()
+        ) // .get
+    }) // it
 
 
 
-    it("cerrar conexión a la base de datos", async function () {
-        try {
-            await laLogica.cerrar()
-        } catch (err) {
-            throw new Error("cerrar conexión a BD fallada: " + err)
-        }
-    }) // it cerrar conexion
+    it("probar GET /longitud", function (hecho) {
+        request.get({ url: IP_PUERTO + "/longitud/hola", headers: { 'User-Agent': 'ruben' } },
+            function (err, respuesta, carga) {
+                assert.equal(err, null, "¿ha habido un error?")
+                assert.equal(respuesta.statusCode, 200, "¿El código no es 200 (OK)")
+                var solucion = JSON.parse(carga)
+                assert.equal(solucion.longitud, 4, "¿La longitud no es 4?")
+                hecho()
+            } // callback
+        ) // .get
+    }) // it
 
-})//describe
 
+
+    it("probar GET /dividir", function (hecho) {
+        request.get({ url: IP_PUERTO + "/dividir?a=10&b=2.5", headers: { 'User-Agent': 'ruben' } },
+            function (err, respuesta, carga) {
+                assert.equal(err, null, "¿ha habido un error?")
+                assert.equal(respuesta.statusCode, 200, "¿El código no es 200 (OK)")
+                var solucion = JSON.parse(carga)
+                assert.equal(solucion.division, 4, "¿El cociente es no es 4?")
+                hecho()
+            } // callback
+        ) // .get
+    }) // it
+
+
+
+
+    it("probar POST /alta", function (hecho) {
+        var datosMedicion = { id: "12", medicion: "1234" }
+        request.post({
+            url: IP_PUERTO + "/alta",
+            headers: { 'User-Agent': 'ruben', 'Content-Type': 'application/json' },
+            body: JSON.stringify(datosMedicion)
+        },
+            function (err, respuesta, carga) {
+                assert.equal(err, null, "¿ha habido un error?")
+                assert.equal(respuesta.statusCode, 200, "¿El código no es 200 (OK)")
+                assert.equal(carga, "OK", "¿La carga no es OK")
+                hecho()
+            } // callback
+        ) // .post
+    })
+
+
+    it("probar GET /busca ", function (hecho) {
+        request.get({ url: IP_PUERTO + "/busca", headers: { 'User-Agent': 'ruben' } },
+            function (err, respuesta, carga) {
+                assert.equal(err, null, "¿ha habido un error?")
+                assert.equal(respuesta.statusCode, 200, "¿El código no es 200 (OK)")
+                assert.equal(carga, "5321", "¿La carga no es 5321?")
+                hecho()
+            } // callback()
+        ) // .get
+    }) // it
+
+
+}) // describe
